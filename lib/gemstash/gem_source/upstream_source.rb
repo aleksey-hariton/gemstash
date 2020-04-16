@@ -133,7 +133,7 @@ module Gemstash
       end
 
       def serve_specs
-        fetch_proxy "specs.4.8.gz", request.query_string
+        fetch_proxy "specs.4.8.gz"
       rescue Gemstash::WebError => e
         halt e.code
       end
