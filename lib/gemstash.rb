@@ -11,6 +11,7 @@ module Gemstash
   autoload :Dependencies,        "gemstash/dependencies"
   autoload :Env,                 "gemstash/env"
   autoload :GemFetcher,          "gemstash/gem_fetcher"
+  autoload :ProxyFetcher,        "gemstash/proxy_fetcher"
   autoload :GemPusher,           "gemstash/gem_pusher"
   autoload :GemSource,           "gemstash/gem_source"
   autoload :GemYanker,           "gemstash/gem_yanker"

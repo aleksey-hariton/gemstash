@@ -128,6 +128,40 @@ module Gemstash
         serve_cached(id, :gem)
       end
 
+      def serve_actual_gem(id)
+        fetch_proxy upstream.url("fetch/actual/gem/#{id}", request.query_string)
+      end
+
+      def serve_specs
+        fetch_proxy "specs.4.8.gz", request.query_string
+      rescue Gemstash::WebError => e
+        halt e.code
+      end
+
+      def serve_dependencies_json
+        fetch_proxy upstream.url("api/v1/dependencies.json", request.query_string)
+      end
+
+      def serve_names
+        fetch_proxy upstream.url("names", request.query_string)
+      end
+
+      def serve_versions
+        fetch_proxy index_upstream.url("versions", request.query_string)
+      end
+
+      def serve_info(name)
+        fetch_proxy index_upstream.url("info/#{name}", request.query_string)
+      end
+
+      def serve_latest_specs
+        fetch_proxy upstream.url("latest_specs.4.8.gz", request.query_string)
+      end
+
+      def serve_prerelease_specs
+        redirect upstream.url("prerelease_specs.4.8.gz", request.query_string)
+      end
+
     private
 
       def serve_cached(id, resource_type)
@@ -163,6 +197,10 @@ module Gemstash
         @gem_fetcher ||= Gemstash::GemFetcher.new(http_client_for(upstream))
       end
 
+      def proxy_fetcher
+        @specs_fetcher ||= Gemstash::ProxyFetcher.new(http_client_for(upstream))
+      end
+
       def fetch_gem(id, resource_type)
         gem_name = Gemstash::Upstream::GemName.new(upstream, id)
         gem_resource = storage.resource(gem_name.name)
@@ -190,6 +228,12 @@ module Gemstash
           gem = gem_resource.save({ resource_type => content }, resource_properties)
           Gemstash::DB::CachedRubygem.store(upstream, gem_name, resource_type)
           gem
+        end
+      end
+
+      def fetch_proxy(path)
+        proxy_fetcher.fetch(path) do |content, _|
+          content
         end
       end
     end
