@@ -133,7 +133,7 @@ module Gemstash
       end
 
       def serve_specs
-        fetch_proxy "specs.4.8.gz"
+        fetch_spec "specs.4.8.gz"
       rescue Gemstash::WebError => e
         halt e.code
       end
@@ -155,11 +155,11 @@ module Gemstash
       end
 
       def serve_latest_specs
-        fetch_proxy upstream.url("latest_specs.4.8.gz", request.query_string)
+        fetch_spec upstream.url("latest_specs.4.8.gz", request.query_string)
       end
 
       def serve_prerelease_specs
-        redirect upstream.url("prerelease_specs.4.8.gz", request.query_string)
+        fetch_spec upstream.url("prerelease_specs.4.8.gz", request.query_string)
       end
 
     private
@@ -236,6 +236,25 @@ module Gemstash
           content
         end
       end
+
+      def fetch_spec(name)
+        content = nil
+        resource_type = :spec
+        resource = storage.resource(name)
+        if resource.exist?(resource_type) && resource.properties[:time] > Time.now.to_i - env["gemstash.env"].config[:spec_cache_timeout]
+          log.info "Spec #{name} is cached, returning #{resource_type}"
+          content = resource.content(resource_type)
+        else
+          log.info "Spec #{name} is not cached, fetching #{resource_type}"
+          content = fetch_proxy name
+  
+          unless resource.exist?(resource_type)
+            resource = resource.save({ resource_type => content }, time: Time.now.to_i)
+          end
+        end
+  
+        content
+      end  
     end
 
     # GemSource for https://rubygems.org (specifically when defined by using the
