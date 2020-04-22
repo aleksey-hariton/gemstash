@@ -248,9 +248,7 @@ module Gemstash
           log.info "Spec #{name} is not cached, fetching #{resource_type}"
           content = fetch_proxy name
   
-          unless resource.exist?(resource_type)
-            resource = resource.save({ resource_type => content }, time: Time.now.to_i)
-          end
+          resource.save({ resource_type => content }, time: Time.now.to_i)
         end
   
         content
